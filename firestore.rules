@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Products - lectura pública, solo scraper puede escribir
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Stores - lectura pública
+    match /stores/{storeId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Categories - lectura pública
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Prices - lectura pública, solo scraper puede escribir
+    match /prices/{priceId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Users - solo el propio usuario puede leer/escribir
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Favorites del usuario
+      match /favorites/{productId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // Shopping lists - solo el propio usuario
+    match /shopping_lists/{listId} {
+      allow read, write: if request.auth != null &&
+        resource.data.user_id == request.auth.uid;
+
+      // Items de la lista
+      match /items/{itemId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+
+    // Analytics - escritura anónima permitida, lectura denegada
+    match /analytics_events/{eventId} {
+      allow write: if true;
+      allow read: if false;
+    }
+
+    // Push tokens - solo el propio dispositivo
+    match /push_tokens/{tokenId} {
+      allow write: if true;
+      allow read: if false;
+    }
+
+    // User roles - solo admin puede leer/escribir
+    match /user_roles/{roleId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+  }
+}
